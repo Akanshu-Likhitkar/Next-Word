@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Next Word AI</title>
+    <style>
+        /* =====================================================
+           GLOBAL
+        ===================================================== */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: 
+                radial-gradient(circle at 10% 10%, rgba(99,102,241,0.20), transparent 30%),
+                radial-gradient(circle at 90% 15%, rgba(168,85,247,0.18), transparent 28%),
+                radial-gradient(circle at 50% 100%, rgba(14,165,233,0.12), transparent 35%),
+                #080b18;
+            color: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 750px;
+            width: 100%;
+            padding: 2.5rem 1.5rem;
+            box-sizing: border-box;
+        }
+
+        /* =====================================================
+           HEADER
+        ===================================================== */
+        .main-title {
+            text-align: center;
+            font-size: 3.4rem;
+            font-weight: 900;
+            background: linear-gradient(90deg, #60a5fa, #8b5cf6, #d946ef);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+            margin: 0 0 8px 0;
+            text-shadow: 0 0 35px rgba(139,92,246,0.25);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 1.05rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .subtitle b { color: #c4b5fd; }
+
+        /* =====================================================
+           INPUTS
+        ===================================================== */
+        .custom-input-label {
+            text-align: center;
+            color: #cbd5e1;
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .text-input {
+            width: 100%;
+            background: rgba(15,23,42,0.85);
+            color: #f8fafc;
+            text-align: center;
+            border: 1px solid rgba(148,163,184,0.20);
+            border-radius: 16px;
+            padding: 17px;
+            font-size: 17px;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.15), 0 8px 30px rgba(0,0,0,0.15);
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        .text-input::placeholder { color: #64748b; }
+        .text-input:focus {
+            border: 1px solid #8b5cf6;
+            box-shadow: 0 0 0 3px rgba(139,92,246,0.15), 0 0 30px rgba(139,92,246,0.12);
+        }
+
+        /* =====================================================
+           RADIO BUTTONS (Word Count)
+        ===================================================== */
+        .count-title {
+            text-align: center;
+            color: #cbd5e1;
+            font-size: 15px;
+            font-weight: 700;
+            margin-top: 35px;
+            margin-bottom: 15px;
+        }
+
+        .radio-group {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            background: rgba(15,23,42,0.55);
+            padding: 12px;
+            border-radius: 18px;
+            border: 1px solid rgba(148,163,184,0.12);
+        }
+
+        .radio-group input[type="radio"] { display: none; }
+
+        .radio-group label {
+            background: rgba(30,41,59,0.75);
+            border-radius: 12px;
+            padding: 10px 16px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            font-weight: bold;
+            color: #94a3b8;
+        }
+
+        .radio-group label:hover { background: rgba(99,102,241,0.25); transform: translateY(-2px); }
+
+        .radio-group input[type="radio"]:checked + label {
+            background: #6366f1;
+            color: white;
+            box-shadow: 0 0 15px rgba(99,102,241,0.5);
+        }
+
+        /* =====================================================
+           GENERATE BUTTON
+        ===================================================== */
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .generate-btn {
+            width: 100%;
+            max-width: 350px;
+            border: none;
+            border-radius: 16px;
+            padding: 15px 20px;
+            font-size: 17px;
+            font-weight: 800;
+            color: white;
+            background: linear-gradient(135deg, #2563eb, #7c3aed, #c026d3);
+            box-shadow: 0 10px 30px rgba(124,58,237,0.30);
+            transition: all 0.25s ease;
+            cursor: pointer;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(168,85,247,0.45);
+            filter: brightness(1.08);
+        }
+
+        .generate-btn:active { transform: scale(0.98); }
+        .generate-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+
+        /* =====================================================
+           SUCCESS ALERTS & PREDICTION CARD
+        ===================================================== */
+        .success-alert {
+            display: none;
+            text-align: center;
+            border-radius: 14px;
+            border: 1px solid rgba(34,197,94,0.25);
+            background: rgba(22,101,52,0.15);
+            color: #4ade80;
+            padding: 15px;
+            margin-top: 25px;
+            font-weight: 600;
+        }
+
+        .prediction-box {
+            display: none;
+            position: relative;
+            text-align: center;
+            margin-top: 25px;
+            padding: 30px;
+            border-radius: 24px;
+            background: linear-gradient(145deg, rgba(30,41,59,0.85), rgba(15,23,42,0.92));
+            border: 1px solid rgba(139,92,246,0.25);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.35), 0 0 40px rgba(99,102,241,0.08);
+        }
+
+        .prediction-label {
+            color: #a78bfa;
+            font-size: 13px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 14px;
+        }
+
+        .prediction-text {
+            color: #f8fafc;
+            font-size: 22px;
+            line-height: 1.8;
+            font-weight: 600;
+            word-wrap: break-word;
+        }
+
+        /* =====================================================
+           FOOTER
+        ===================================================== */
+        .footer {
+            text-align: center;
+            color: #64748b;
+            font-size: 13px;
+            margin-top: 45px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(148,163,184,0.08);
+        }
+        .footer span { color: #a78bfa; font-weight: 700; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <h1 class="main-title">✨ Next Word AI</h1>
+    <div class="subtitle">Generate intelligent text using your <b>GRU model</b></div>
+
+    <!-- Input Area -->
+    <div class="custom-input-label">Enter your text</div>
+    <input type="text" id="text-input" class="text-input" placeholder="Try something like: me and you">
+
+    <!-- Word Count Selector -->
+    <div class="count-title">⚡ Choose how many words to generate</div>
+    <div class="radio-group" id="word-count-group">
+        <!-- Generates 1 to 10 radio buttons -->
+        <input type="radio" id="wc1" name="word-count" value="1"><label for="wc1">1</label>
+        <input type="radio" id="wc2" name="word-count" value="2"><label for="wc2">2</label>
+        <input type="radio" id="wc3" name="word-count" value="3"><label for="wc3">3</label>
+        <input type="radio" id="wc4" name="word-count" value="4"><label for="wc4">4</label>
+        <input type="radio" id="wc5" name="word-count" value="5"><label for="wc5">5</label>
+        <input type="radio" id="wc6" name="word-count" value="6"><label for="wc6">6</label>
+        <input type="radio" id="wc7" name="word-count" value="7" checked><label for="wc7">7</label>
+        <input type="radio" id="wc8" name="word-count" value="8"><label for="wc8">8</label>
+        <input type="radio" id="wc9" name="word-count" value="9"><label for="wc9">9</label>
+        <input type="radio" id="wc10" name="word-count" value="10"><label for="wc10">10</label>
+    </div>
+
+    <!-- Generate Button -->
+    <div class="btn-container">
+        <button id="generate-btn" class="generate-btn">✨ Generate 7 Words</button>
+    </div>
+
+    <!-- Results Area -->
+    <div id="success-alert" class="success-alert"></div>
+    <div id="prediction-box" class="prediction-box">
+        <div class="prediction-label">✨ AI Generated Text</div>
+        <div id="prediction-text" class="prediction-text"></div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        Built with <span>❤️</span> using <span>HTML/JS</span> + <span>FastAPI</span> + <span>GRU model</span>
+    </div>
+</div>
+
+<script>
+    const generateBtn = document.getElementById('generate-btn');
+    const radios = document.querySelectorAll('input[name="word-count"]');
+    const alertBox = document.getElementById('success-alert');
+    const predBox = document.getElementById('prediction-box');
+    const predText = document.getElementById('prediction-text');
+
+    // Button text update on radio change
+    radios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            const count = e.target.value;
+            generateBtn.innerText = `✨ Generate ${count} Word${count > 1 ? 's' : ''}`;
+        });
+    });
+
+    // API Call Logic
+    generateBtn.addEventListener('click', async () => {
+        const inputText = document.getElementById('text-input').value;
+        const wordCount = document.querySelector('input[name="word-count"]:checked').value;
+
+        if (!inputText.trim()) {
+            alert("⚠️ Please enter some text first.");
+            return;
+        }
+
+        // UI Loading State
+        generateBtn.innerText = "Generating...";
+        generateBtn.disabled = true;
+        alertBox.style.display = 'none';
+        predBox.style.display = 'none';
+
+        try {
+            // FastAPI backend ko request (port 8000 par ensure karein)
+            const response = await fetch('http://127.0.0.1:8000/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    text: inputText,
+                    word_count: parseInt(wordCount)
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Asali result screen par show karna
+                predText.innerText = data.result;
+                
+                alertBox.innerText = `🎉 Successfully generated ${wordCount} word${wordCount > 1 ? 's' : ''}!`;
+                alertBox.style.display = 'block';
+                
+                predBox.style.display = 'block';
+            } else {
+                alert("Error: " + (data.detail || "Something went wrong"));
+            }
+        } catch (error) {
+            console.error("API call failed:", error);
+            alert("Backend se connect nahi ho paya. Kya FastAPI server (python main.py) chal raha hai?");
+        } finally {
+            // Button ko wapas normal state mein lana
+            generateBtn.innerText = `✨ Generate ${wordCount} Word${wordCount > 1 ? 's' : ''}`;
+            generateBtn.disabled = false;
+        }
+    });
+</script>
+
+</body>
+</html>
